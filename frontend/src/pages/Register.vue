@@ -11,7 +11,7 @@
         <input v-model="password" type="password" class="input" required placeholder="••••••••" minlength="8" />
         <p class="text-xs text-gray-500 mt-1">Use at least 8 characters. You'll be logged in automatically after registering.</p>
       </div>
-      <button class="btn">Create account</button>
+      <button class="btn" :disabled="loading">{{ loading ? 'Creating…' : 'Create account' }}</button>
       <p class="text-sm mt-2">Have an account? <RouterLink to="/login" class="text-blue-600">Login</RouterLink></p>
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     </form>
@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from '../lib/toast'
 import { useAuth } from '../stores/auth'
 
 const email = ref('')
@@ -27,15 +28,20 @@ const password = ref('')
 const error = ref('')
 const auth = useAuth()
 const router = useRouter()
+const loading = ref(false)
 
 async function onSubmit() {
   error.value = ''
+  loading.value = true
   try {
     await auth.register(email.value, password.value)
+    toast('Account created!','success')
     router.push('/')
   } catch (e: any) {
     error.value = 'Registration failed'
+    toast('Registration failed','error')
   }
+  loading.value = false
 }
 </script>
 <style scoped>

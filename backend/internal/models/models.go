@@ -35,14 +35,17 @@ type User struct {
 }
 
 type Product struct {
-	ID          uint      `gorm:"primaryKey"`
-	Name        string    `gorm:"size:200;not null"`
-	Description string    `gorm:"type:text"`
-	PriceCents  int64     `gorm:"not null"`
-	Stock       int       `gorm:"not null;default:0"`
-	ImageURL    string    `gorm:"size:500"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Name        string    `gorm:"size:200;not null" json:"name"`
+	Description string    `gorm:"type:text" json:"description"`
+	PriceCents  int64     `gorm:"not null" json:"price_cents"`
+	Stock       int       `gorm:"not null;default:0" json:"stock"`
+	ImageURL    string    `gorm:"size:500" json:"image_url"`
+	Category    string    `gorm:"size:120" json:"category"`
+	SKU         string    `gorm:"size:64" json:"sku"`
+	Rating      float32   `gorm:"type:decimal(3,2);default:0" json:"rating"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type Order struct {

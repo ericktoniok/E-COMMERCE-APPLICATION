@@ -20,6 +20,8 @@ services:
     build: ./backend
     env_file:
       - .env.example
+    environment:
+      - SEED=true
     volumes:
       - images_data:/data/images
     ports:

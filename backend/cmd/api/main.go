@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"mini-ecommerce/backend/internal/config"
 	"mini-ecommerce/backend/internal/db"
 	"mini-ecommerce/backend/internal/models"
@@ -24,6 +25,13 @@ func main() {
 	port := cfg.Port
 
 	app := fiber.New()
+
+	// CORS for local dev (frontend on :5173)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:5173",
+		AllowHeaders:  "*",
+		AllowMethods:  "*",
+	}))
 
 	app.Get("/api/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
@@ -75,9 +83,21 @@ func main() {
 	var pc int64
 	if err := dbConn.Model(&models.Product{}).Count(&pc).Error; err == nil {
 		if os.Getenv("SEED") == "true" || pc == 0 {
-			_ = dbConn.Create(&models.Product{Name: "Sample Phone", Description: "Nice smartphone", PriceCents: 59999, Stock: 10}).Error
-			_ = dbConn.Create(&models.Product{Name: "Wireless Earbuds", Description: "Noise cancelling", PriceCents: 19999, Stock: 25}).Error
-			_ = dbConn.Create(&models.Product{Name: "Laptop Sleeve", Description: "13 inch", PriceCents: 2999, Stock: 50}).Error
+			seed := []models.Product{
+				{Name: "Sample Phone", Description: "6.1\" OLED, 128GB, great camera.", PriceCents: 59999, Stock: 12, Category: "Electronics", SKU: "PHN-001", Rating: 4.6},
+				{Name: "Wireless Earbuds", Description: "Bluetooth 5.3, ANC, 24h battery.", PriceCents: 19999, Stock: 40, Category: "Audio", SKU: "EAR-201", Rating: 4.4},
+				{Name: "Laptop Sleeve", Description: "Neoprene, fits 13\" laptops.", PriceCents: 2999, Stock: 50, Category: "Accessories", SKU: "SLV-133", Rating: 4.1},
+				{Name: "Mechanical Keyboard", Description: "Hot‑swappable, RGB, brown switches.", PriceCents: 8999, Stock: 20, Category: "Peripherals", SKU: "KEY-882", Rating: 4.7},
+				{Name: "USB‑C Hub", Description: "7‑in‑1: HDMI, SD, USB‑A, PD pass‑through.", PriceCents: 4599, Stock: 35, Category: "Peripherals", SKU: "HUB-701", Rating: 4.3},
+				{Name: "4K Monitor", Description: "27\" IPS, 60Hz, thin bezels.", PriceCents: 229999, Stock: 8, Category: "Displays", SKU: "MON-270", Rating: 4.5},
+				{Name: "Gaming Mouse", Description: "Ultra‑light, 6 programmable buttons.", PriceCents: 4999, Stock: 30, Category: "Peripherals", SKU: "MOU-510", Rating: 4.2},
+				{Name: "Portable SSD 1TB", Description: "USB‑C, 1000MB/s, metal body.", PriceCents: 119999, Stock: 15, Category: "Storage", SKU: "SSD-1TB", Rating: 4.8},
+				{Name: "Smartwatch", Description: "AMOLED, GPS, heart‑rate, 7‑day battery.", PriceCents: 89999, Stock: 18, Category: "Wearables", SKU: "SWT-009", Rating: 4.0},
+				{Name: "Desk Lamp", Description: "LED, adjustable color temperature.", PriceCents: 2599, Stock: 60, Category: "Home Office", SKU: "LMP-120", Rating: 4.1},
+			}
+			if err := dbConn.Create(&seed).Error; err != nil {
+				log.Printf("seed products error: %v", err)
+			}
 		}
 	}
 

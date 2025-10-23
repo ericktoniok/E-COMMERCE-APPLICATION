@@ -11,7 +11,7 @@
         <input v-model="password" type="password" class="input" required placeholder="••••••••" minlength="8" />
         <p class="text-xs text-gray-500 mt-1">Use the seeded admin for dashboard access: <code>admin@local.test</code> / <code>Admin123!</code></p>
       </div>
-      <button class="btn">Login</button>
+      <button class="btn" :disabled="loading">{{ loading ? 'Signing in…' : 'Login' }}</button>
       <p class="text-sm mt-2">No account? <RouterLink to="/register" class="text-blue-600">Register</RouterLink></p>
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     </form>
@@ -21,21 +21,27 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/auth'
+import { toast } from '../lib/toast'
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
 const auth = useAuth()
 const router = useRouter()
+const loading = ref(false)
 
 async function onSubmit() {
   error.value = ''
+  loading.value = true
   try {
     await auth.login(email.value, password.value)
+    toast('Welcome back!','success')
     router.push('/')
   } catch (e: any) {
     error.value = 'Login failed'
+    toast('Login failed','error')
   }
+  loading.value = false
 }
 </script>
 <style scoped>

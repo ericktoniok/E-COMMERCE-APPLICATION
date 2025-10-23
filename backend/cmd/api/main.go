@@ -56,6 +56,25 @@ func main() {
 		}
 	}
 
+	// Idempotent image enrichment for known products (only if missing)
+	imgMap := map[string]string{
+		"Sample Phone":       "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&q=80&auto=format&fit=crop",
+		"Wireless Earbuds":   "https://images.unsplash.com/photo-1585386959984-a41552231658?w=1200&q=80&auto=format&fit=crop",
+		"Laptop Sleeve":      "https://images.unsplash.com/photo-1527430253228-e93688616381?w=1200&q=80&auto=format&fit=crop",
+		"Mechanical Keyboard": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&q=80&auto=format&fit=crop",
+		"USB‑C Hub":          "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa0?w=1200&q=80&auto=format&fit=crop",
+		"4K Monitor":         "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&q=80&auto=format&fit=crop",
+		"Gaming Mouse":       "https://images.unsplash.com/photo-1555617117-08a1b4d8f8b9?w=1200&q=80&auto=format&fit=crop",
+		"Portable SSD 1TB":   "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=1200&q=80&auto=format&fit=crop",
+		"Smartwatch":         "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?w=1200&q=80&auto=format&fit=crop",
+		"Desk Lamp":          "https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=1200&q=80&auto=format&fit=crop",
+	}
+	for name, url := range imgMap {
+		dbConn.Model(&models.Product{}).
+			Where("name = ? AND (image_url = '' OR image_url IS NULL)", name).
+			Update("image_url", url)
+	}
+
 	// App context and auth wiring
 	jwtMgr := auth.NewJWTManager(cfg.JWTSecret, 72*time.Hour)
 	ax := &appctx.Context{DB: dbConn, JWT: jwtMgr, Cfg: cfg}

@@ -47,7 +47,7 @@ func (h *WebhookController) Mpesa(c *fiber.Ctx) error {
 	_ = h.Orders.UpdateStatus(w.OrderID, orderStatus)
 	// Broadcast update
 	if h.OrderHub != nil {
-		payload, _ := json.Marshal(map[string]any{
+		payload, _ := json.Marshal(map[string]interface{}{
 			"type": "order_update",
 			"order_id": w.OrderID,
 			"status": orderStatus,

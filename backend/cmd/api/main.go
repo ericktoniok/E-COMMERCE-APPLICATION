@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"net/http"
 	"os"
@@ -155,12 +156,12 @@ func main() {
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
 		sub := orderHub.Subscribe()
-		c.Context().SetBodyStreamWriter(func(w *fiber.StreamWriter) {
+		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			for msg := range sub {
 				if _, err := w.Write([]byte("data: ")); err != nil { break }
 				if _, err := w.Write(msg); err != nil { break }
 				if _, err := w.Write([]byte("\n\n")); err != nil { break }
-				if f, ok := w.(interface{ Flush() }); ok { f.Flush() }
+				_ = w.Flush()
 			}
 		})
 		orderHub.Unsubscribe(sub)
@@ -178,12 +179,12 @@ func main() {
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
 		sub := orderHub.Subscribe()
-		c.Context().SetBodyStreamWriter(func(w *fiber.StreamWriter) {
+		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 			for msg := range sub {
 				if _, err := w.Write([]byte("data: ")); err != nil { break }
 				if _, err := w.Write(msg); err != nil { break }
 				if _, err := w.Write([]byte("\n\n")); err != nil { break }
-				if f, ok := w.(interface{ Flush() }); ok { f.Flush() }
+				_ = w.Flush()
 			}
 		})
 		orderHub.Unsubscribe(sub)

@@ -15,7 +15,16 @@
       <button class="px-3 py-1 rounded border" :class="{ 'bg-blue-600 text-white border-blue-600': selectedCat===''}" @click="selectedCat=''">All</button>
       <button v-for="c in categories" :key="c" class="px-3 py-1 rounded border" :class="{ 'bg-blue-600 text-white border-blue-600': selectedCat===c }" @click="selectedCat=c">{{ c }}</button>
     </div>
-    <div v-if="!filtered.length" class="text-gray-600">
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div v-for="n in 6" :key="n" class="border rounded p-3 bg-white animate-pulse">
+        <div class="w-full h-40 bg-gray-200 rounded mb-2"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+        <div class="h-3 bg-gray-100 rounded w-1/3 mb-2"></div>
+        <div class="h-3 bg-gray-100 rounded w-2/3 mb-2"></div>
+        <div class="h-6 bg-gray-200 rounded w-24"></div>
+      </div>
+    </div>
+    <div v-else-if="!filtered.length" class="text-gray-600">
       No products found.
       <RouterLink v-if="isAdmin" to="/admin/products" class="text-blue-600 underline ml-1">Add one</RouterLink>.
     </div>
@@ -28,7 +37,7 @@
         </div>
         <div class="text-yellow-500 text-sm">{{ stars(p.rating) }}</div>
         <p class="text-sm text-gray-600 mt-1">{{ p.description }}</p>
-        <p class="font-semibold mt-1">{{ (p.price_cents/100).toFixed(2) }}</p>
+        <p class="font-semibold mt-1">{{ money(p.price_cents) }}</p>
         <button class="btn mt-2" @click="addToCart(p)">Add to cart</button>
       </div>
     </div>
@@ -38,8 +47,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../lib/api'
 import { useAuth } from '../stores/auth'
+import { money } from '../lib/format'
 
 const products = ref<any[]>([])
+const loading = ref(false)
 const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
 const q = ref('')
 const min = ref<number | null>(null)
@@ -50,7 +61,12 @@ const auth = useAuth()
 const isAdmin = computed(() => auth.role === 'admin')
 
 onMounted(async () => {
-  products.value = await api.products()
+  loading.value = true
+  try {
+    products.value = await api.products()
+  } finally {
+    loading.value = false
+  }
 })
 
 const categories = computed(() => Array.from(new Set(products.value.map((p: any) => p.category).filter(Boolean))).sort())

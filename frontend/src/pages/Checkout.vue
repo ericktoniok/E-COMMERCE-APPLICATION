@@ -8,6 +8,7 @@
         <ul class="list-disc list-inside text-sm">
           <li v-for="it in items" :key="it.product_id">{{ it.name || ('#'+it.product_id) }} x {{ it.qty }}</li>
         </ul>
+        <div class="mt-3 text-sm">Subtotal: <span class="font-semibold">{{ money(subtotal) }}</span></div>
       </div>
       <button class="btn-primary" @click="placeOrder" :disabled="loading">
         {{ loading ? 'Placing order...' : 'Place Order' }}
@@ -21,14 +22,22 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
+import { money } from '../lib/format'
 
 const items = ref<Array<{product_id:number; qty:number; name?:string}>>([])
 const loading = ref(false)
 const error = ref('')
 const router = useRouter()
+const prices = ref<Record<number, number>>({})
+const subtotal = ref(0)
 
 onMounted(() => {
   items.value = JSON.parse(localStorage.getItem('cart') || '[]')
+  // Fetch product prices to compute subtotal
+  api.products().then((list: any[]) => {
+    prices.value = Object.fromEntries(list.map(p => [p.id, p.price_cents]))
+    subtotal.value = items.value.reduce((sum, it) => sum + (prices.value[it.product_id] || 0) * it.qty, 0)
+  }).catch(()=>{})
 })
 
 async function placeOrder() {

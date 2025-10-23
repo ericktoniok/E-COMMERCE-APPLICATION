@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.22-alpine AS base
+FROM golang:1.23-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache git build-base
 COPY go.mod go.sum ./
@@ -12,5 +12,6 @@ WORKDIR /app
 RUN adduser -D appuser
 USER appuser
 COPY --from=base /app/app /app/app
+COPY --from=base /app/migrations /app/migrations
 EXPOSE 8080
 ENTRYPOINT ["/app/app"]

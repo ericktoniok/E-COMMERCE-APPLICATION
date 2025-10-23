@@ -44,6 +44,8 @@ func main() {
 
 	// DB connection and migrations
 	dbConn := db.Connect(cfg.DatabaseURL)
+	// Run versioned SQL migrations (kept alongside the app); safe if no changes
+	db.RunMigrations(cfg.DatabaseURL, "./migrations")
 	if err := dbConn.AutoMigrate(&models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{}, &models.Transaction{}); err != nil {
 		log.Fatalf("migration error: %v", err)
 	}

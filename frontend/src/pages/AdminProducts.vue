@@ -15,7 +15,7 @@
         <div class="flex-1">
           <div class="font-medium">#{{ p.id }} - {{ p.name }}</div>
           <div class="text-sm text-gray-600">{{ p.description }}</div>
-          <div class="text-sm">Price: {{ (p.price_cents/100).toFixed(2) }} | Stock: {{ p.stock }}</div>
+          <div class="text-sm">Price: {{ money(p.price_cents) }} | Stock: {{ p.stock }}</div>
           <div class="mt-2 flex items-center gap-2">
             <input type="file" @change="e=>upload(p.id, (e.target as HTMLInputElement).files?.[0]||null)" />
           </div>
@@ -32,6 +32,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
+import { money } from '../lib/format'
 
 const products = ref<any[]>([])
 const err = ref('')

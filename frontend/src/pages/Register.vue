@@ -4,11 +4,12 @@
     <form @submit.prevent="onSubmit" class="space-y-3">
       <div>
         <label class="block text-sm">Email</label>
-        <input v-model="email" type="email" class="input" required />
+        <input v-model="email" type="email" class="input" required placeholder="you@example.com" />
       </div>
       <div>
         <label class="block text-sm">Password</label>
-        <input v-model="password" type="password" class="input" required />
+        <input v-model="password" type="password" class="input" required placeholder="••••••••" minlength="8" />
+        <p class="text-xs text-gray-500 mt-1">Use at least 8 characters. You'll be logged in automatically after registering.</p>
       </div>
       <button class="btn">Create account</button>
       <p class="text-sm mt-2">Have an account? <RouterLink to="/login" class="text-blue-600">Login</RouterLink></p>

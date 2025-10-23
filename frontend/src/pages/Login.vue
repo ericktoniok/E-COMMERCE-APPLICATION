@@ -4,11 +4,12 @@
     <form @submit.prevent="onSubmit" class="space-y-3">
       <div>
         <label class="block text-sm">Email</label>
-        <input v-model="email" type="email" class="input" required />
+        <input v-model="email" type="email" class="input" required placeholder="you@example.com" />
       </div>
       <div>
         <label class="block text-sm">Password</label>
-        <input v-model="password" type="password" class="input" required />
+        <input v-model="password" type="password" class="input" required placeholder="••••••••" minlength="8" />
+        <p class="text-xs text-gray-500 mt-1">Use the seeded admin for dashboard access: <code>admin@local.test</code> / <code>Admin123!</code></p>
       </div>
       <button class="btn">Login</button>
       <p class="text-sm mt-2">No account? <RouterLink to="/register" class="text-blue-600">Register</RouterLink></p>

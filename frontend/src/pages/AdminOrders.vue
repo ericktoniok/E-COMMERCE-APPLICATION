@@ -19,10 +19,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { api } from '../lib/api'
 
 const orders = ref<any[]>([])
+let timer: any = null
 
 async function load() {
   try {
@@ -32,5 +33,10 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  timer = setInterval(load, 7000)
+})
+
+onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>

@@ -17,16 +17,24 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { api } from '../lib/api'
 
 const orders = ref<any[]>([])
+let timer: any = null
 
-onMounted(async () => {
+async function load() {
   try {
     orders.value = await api.myOrders()
   } catch (e) {
     // likely unauthenticated
   }
+}
+
+onMounted(() => {
+  load()
+  timer = setInterval(load, 7000)
 })
+
+onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>

@@ -7,11 +7,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"mini-ecommerce/backend/internal/models"
 	"mini-ecommerce/backend/internal/repositories"
+	"mini-ecommerce/backend/internal/realtime"
 )
 
 type WebhookController struct {
 	Orders       *repositories.OrderRepository
 	Transactions *repositories.TransactionRepository
+	OrderHub     *realtime.Hub
 }
 
 type mpesaWebhook struct {
@@ -24,6 +26,8 @@ type mpesaWebhook struct {
 func NewWebhookController(o *repositories.OrderRepository, t *repositories.TransactionRepository) *WebhookController {
 	return &WebhookController{Orders: o, Transactions: t}
 }
+
+func (h *WebhookController) SetOrderHub(hub *realtime.Hub) { h.OrderHub = hub }
 
 func (h *WebhookController) Mpesa(c *fiber.Ctx) error {
 	b := c.Body()
@@ -41,5 +45,14 @@ func (h *WebhookController) Mpesa(c *fiber.Ctx) error {
 	orderStatus := models.OrderFailed
 	if status == models.TxSuccess { orderStatus = models.OrderPaid }
 	_ = h.Orders.UpdateStatus(w.OrderID, orderStatus)
+	// Broadcast update
+	if h.OrderHub != nil {
+		payload, _ := json.Marshal(map[string]any{
+			"type": "order_update",
+			"order_id": w.OrderID,
+			"status": orderStatus,
+		})
+		h.OrderHub.Broadcast(payload)
+	}
 	return c.SendStatus(http.StatusOK)
 }

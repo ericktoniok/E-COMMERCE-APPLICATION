@@ -26,6 +26,8 @@ import { toast } from '../lib/toast'
 const orders = ref<any[]>([])
 let timer: any = null
 const lastOk = ref(true)
+let es: EventSource | null = null
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
 
 async function load() {
   try {
@@ -38,8 +40,18 @@ async function load() {
 
 onMounted(() => {
   load()
+  // SSE subscription for admin orders
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      es = new EventSource(`${apiBase}/api/admin/orders/stream?token=${encodeURIComponent(token)}`)
+      es.onmessage = () => { load() }
+      es.onerror = () => { /* fallback keeps running */ }
+    } catch {}
+  }
+  // Fallback polling
   timer = setInterval(load, 7000)
 })
 
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => { if (timer) clearInterval(timer); if (es) es.close() })
 </script>

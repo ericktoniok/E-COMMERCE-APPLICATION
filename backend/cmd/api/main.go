@@ -18,6 +18,7 @@ import (
 	"mini-ecommerce/backend/internal/repositories"
 	"mini-ecommerce/backend/internal/services"
 	"mini-ecommerce/backend/internal/utils"
+	"mini-ecommerce/backend/internal/realtime"
 )
 
 func main() {
@@ -133,9 +134,61 @@ func main() {
 	adminOrders := api.Group("/admin/orders", middlewares.JWTProtect(ax), middlewares.RequireRole(string(models.RoleAdmin)))
 	adminOrders.Get("/", orderCtrl.AdminList)
 
+	// Real-time hub for order updates
+	orderHub := realtime.NewHub()
+
 	// Webhooks
 	webhookCtrl := controllers.NewWebhookController(orderRepo, txRepo)
+	webhookCtrl.SetOrderHub(orderHub)
 	api.Post("/webhooks/mpesa", webhookCtrl.Mpesa)
+
+	// SSE streams (token via query string because EventSource can't send headers)
+	api.Get("/orders/stream", func(c *fiber.Ctx) error {
+		token := c.Query("token")
+		if token == "" {
+			return c.SendStatus(http.StatusUnauthorized)
+		}
+		if _, err := jwtMgr.Parse(token); err != nil {
+			return c.SendStatus(http.StatusUnauthorized)
+		}
+		c.Set("Content-Type", "text/event-stream")
+		c.Set("Cache-Control", "no-cache")
+		c.Set("Connection", "keep-alive")
+		sub := orderHub.Subscribe()
+		c.Context().SetBodyStreamWriter(func(w *fiber.StreamWriter) {
+			for msg := range sub {
+				if _, err := w.Write([]byte("data: ")); err != nil { break }
+				if _, err := w.Write(msg); err != nil { break }
+				if _, err := w.Write([]byte("\n\n")); err != nil { break }
+				if f, ok := w.(interface{ Flush() }); ok { f.Flush() }
+			}
+		})
+		orderHub.Unsubscribe(sub)
+		return nil
+	})
+
+	api.Get("/admin/orders/stream", func(c *fiber.Ctx) error {
+		token := c.Query("token")
+		if token == "" { return c.SendStatus(http.StatusUnauthorized) }
+		claims, err := jwtMgr.Parse(token)
+		if err != nil || claims.Role != string(models.RoleAdmin) {
+			return c.SendStatus(http.StatusUnauthorized)
+		}
+		c.Set("Content-Type", "text/event-stream")
+		c.Set("Cache-Control", "no-cache")
+		c.Set("Connection", "keep-alive")
+		sub := orderHub.Subscribe()
+		c.Context().SetBodyStreamWriter(func(w *fiber.StreamWriter) {
+			for msg := range sub {
+				if _, err := w.Write([]byte("data: ")); err != nil { break }
+				if _, err := w.Write(msg); err != nil { break }
+				if _, err := w.Write([]byte("\n\n")); err != nil { break }
+				if f, ok := w.(interface{ Flush() }); ok { f.Flush() }
+			}
+		})
+		orderHub.Unsubscribe(sub)
+		return nil
+	})
 
 	log.Printf("API listening on :%s", port)
 	if err := app.Listen(":" + port); err != nil {

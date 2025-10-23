@@ -1,0 +1,27 @@
+# Root
+.env
+.env.*
+*.log
+.DS_Store
+
+# Backend
+backend/tmp/
+backend/storage/
+backend/storage/images/
+backend/app
+backend/tmp/app
+backend/*.exe
+
+# Go
+**/*.test
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Docker
+**/.dockerignore
+
+# IDE
+.vscode/
+.idea/

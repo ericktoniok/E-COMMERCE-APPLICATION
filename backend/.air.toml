@@ -1,0 +1,6 @@
+root = "."
+build = "go build -o ./tmp/app ./cmd/api"
+cmd = "./tmp/app"
+include_ext = ["go"]
+exclude_dir = ["tmp", "vendor", "db", "storage"]
+delay = 1000

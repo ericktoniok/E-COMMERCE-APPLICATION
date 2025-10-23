@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,8 +36,9 @@ func NewAuthController(ax *appctx.Context, auth *services.AuthService) *AuthCont
 
 func (h *AuthController) Register(c *fiber.Ctx) error {
 	var req registerReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad request"})
+	log.Printf("/auth/register body: %s", string(c.Body()))
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad request", "detail": err.Error()})
 	}
 	u, err := h.Auth.Register(req.Email, req.Password)
 	if err != nil {
@@ -50,8 +53,9 @@ func (h *AuthController) Register(c *fiber.Ctx) error {
 
 func (h *AuthController) Login(c *fiber.Ctx) error {
 	var req loginReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad request"})
+	log.Printf("/auth/login body: %s", string(c.Body()))
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad request", "detail": err.Error()})
 	}
 	u, err := h.Auth.Login(req.Email, req.Password)
 	if err != nil {

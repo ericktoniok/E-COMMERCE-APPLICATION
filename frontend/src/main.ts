@@ -3,5 +3,12 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './styles.css'
+import { useAuth } from './stores/auth'
 
-createApp(App).use(createPinia()).use(router).mount('#app')
+const app = createApp(App)
+const pinia = createPinia()
+app.use(pinia)
+app.use(router)
+// initialize auth token from localStorage
+useAuth(pinia).init()
+app.mount('#app')

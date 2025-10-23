@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +26,7 @@ func NewWebhookController(o *repositories.OrderRepository, t *repositories.Trans
 }
 
 func (h *WebhookController) Mpesa(c *fiber.Ctx) error {
-	b, _ := io.ReadAll(c.Body())
+	b := c.Body()
 	var w mpesaWebhook
 	if err := json.Unmarshal(b, &w); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "bad payload"})

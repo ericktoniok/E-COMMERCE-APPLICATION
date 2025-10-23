@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -69,6 +70,16 @@ func main() {
 	admin.Put(":id", prodCtrl.Update)
 	admin.Delete(":id", prodCtrl.Delete)
 	admin.Post(":id/image", prodCtrl.UploadImage)
+
+	// Seed sample products when requested or when table is empty
+	var pc int64
+	if err := dbConn.Model(&models.Product{}).Count(&pc).Error; err == nil {
+		if os.Getenv("SEED") == "true" || pc == 0 {
+			_ = dbConn.Create(&models.Product{Name: "Sample Phone", Description: "Nice smartphone", PriceCents: 59999, Stock: 10}).Error
+			_ = dbConn.Create(&models.Product{Name: "Wireless Earbuds", Description: "Noise cancelling", PriceCents: 19999, Stock: 25}).Error
+			_ = dbConn.Create(&models.Product{Name: "Laptop Sleeve", Description: "13 inch", PriceCents: 2999, Stock: 50}).Error
+		}
+	}
 
 	// Orders & Checkout
 	orderRepo := repositories.NewOrderRepository(dbConn)

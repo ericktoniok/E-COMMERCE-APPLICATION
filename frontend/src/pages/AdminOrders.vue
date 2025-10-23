@@ -21,15 +21,18 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { api } from '../lib/api'
+import { toast } from '../lib/toast'
 
 const orders = ref<any[]>([])
 let timer: any = null
+const lastOk = ref(true)
 
 async function load() {
   try {
     orders.value = await api.adminOrders()
+    if (!lastOk.value) { toast('Admin orders reconnected','success'); lastOk.value = true }
   } catch (e) {
-    // likely unauthorized
+    if (lastOk.value) { toast('Failed to load admin orders','error'); lastOk.value = false }
   }
 }
 

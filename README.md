@@ -139,4 +139,15 @@ Orders pages receive live updates via SSE and also poll every 7s as a safety net
 - Frontend type errors (Volar/TS): ensure `node_modules` exists in the web container; restart TS/Vue server if needed.
 - CORS: frontend must run on `http://localhost:5173` or update CORS allowlist in `main.go`.
 - Duplicate products: avoid setting `SEED=true` permanently; it can create duplicates on each boot.
+
+## Screenshots & Demo
+- Add your own screenshots to `docs/` and reference them here. Suggested shots:
+  - `docs/screen_products.png` – Storefront with filters and categories
+  - `docs/screen_cart_checkout.png` – Cart and Checkout flow
+  - `docs/screen_orders_live.png` – Orders page showing SSE “Live” updates
+  - `docs/screen_admin_orders.png` – Admin Orders with filters, counters, CSV export
+
+Capture tips:
+- Use the Vite dev server at `http://localhost:5173` and resize to 1440×900 for consistent images.
+- For GIFs, use `ScreenToGif` (Windows) or `Kap` (macOS) and keep under 10MB.
 ```

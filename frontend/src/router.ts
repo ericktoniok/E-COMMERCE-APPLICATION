@@ -6,6 +6,8 @@ import Products from './pages/Products.vue'
 import Orders from './pages/Orders.vue'
 import Cart from './pages/Cart.vue'
 import Checkout from './pages/Checkout.vue'
+import AdminProducts from './pages/AdminProducts.vue'
+// AdminOrders could be added similarly
 
 const routes = [
   { path: '/', name: 'home', component: Home },
@@ -15,6 +17,7 @@ const routes = [
   { path: '/orders', name: 'orders', component: Orders },
   { path: '/cart', name: 'cart', component: Cart },
   { path: '/checkout', name: 'checkout', component: Checkout },
+  { path: '/admin/products', name: 'admin-products', component: AdminProducts },
 ]
 
 export default createRouter({

@@ -15,6 +15,14 @@ async function request(path: string, opts: RequestInit = {}) {
   return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text()
 }
 
+async function requestMultipart(path: string, form: FormData) {
+  const headers: Record<string, string> = {}
+  if (token.value) headers['Authorization'] = `Bearer ${token.value}`
+  const res = await fetch(`${base}${path}`, { method: 'POST', body: form, headers })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
 export const api = {
   // auth
   register: (email: string, password: string) => request('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
@@ -25,6 +33,7 @@ export const api = {
   createProduct: (p: any) => request('/api/products', { method: 'POST', body: JSON.stringify(p) }),
   updateProduct: (id: number, p: any) => request(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(p) }),
   deleteProduct: (id: number) => request(`/api/products/${id}`, { method: 'DELETE' }),
+  uploadProductImage: (id: number, file: File) => { const f = new FormData(); f.append('image', file); return requestMultipart(`/api/products/${id}/image`, f) },
 
   // orders
   checkout: (items: Array<{product_id:number; qty:number}>) => request('/api/cart/checkout', { method: 'POST', body: JSON.stringify({ items }) }),

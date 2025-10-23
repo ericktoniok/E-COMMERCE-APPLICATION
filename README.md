@@ -7,6 +7,15 @@ Production‑style MVP with JWT auth, role‑based access, product CRUD, checkou
 - Frontend: Vue 3, TypeScript, Vite, Pinia, Vue Router, TailwindCSS
 - Infra: Docker Compose (api, db, web, mock‑mpesa)
 
+## Features
+- Auth with JWT (customer/admin) and route guards (requiresAuth/requiresAdmin)
+- Products list with search, category filters, price range, and sorting (price/rating)
+- Admin product CRUD with image upload and loading/toast feedback
+- Cart with price lookup, line totals, and formatted subtotal
+- Checkout that triggers mock M‑Pesa payment and webhook updates
+- Orders pages (customer/admin) with real‑time status via SSE and polling fallback
+- Beautiful global gradient background with configurable schemes
+
 ## Quick Start
 
 1) Clone and create env (defaults are provided in `.env.example`):
@@ -29,8 +38,23 @@ Services:
 - Password: Admin123!
 
 4) Seed products (auto):
-- On first run (empty table) backend seeds 3 sample products
-- Force reseed: set env `SEED=true` for `api` service and restart it
+- On first run (empty table) backend seeds a curated catalog (~10 products)
+- Forced reseeding is disabled by default to avoid duplicates; you can set env `SEED=true` temporarily if desired
+
+## Real‑Time Order Updates
+- The frontend subscribes to SSE streams:
+  - Customer: `GET /api/orders/stream?token=<JWT>`
+  - Admin: `GET /api/admin/orders/stream?token=<JWT>`
+- Backend broadcasts on M‑Pesa webhook to push `{ type: "order_update", order_id, status }`
+- Pages still poll every 7s as a fallback.
+
+## Background & UI Polish
+- A global background component `BackgroundFX` renders a soft gradient with animated blobs and a subtle grid.
+- Configure scheme in `frontend/src/App.vue`:
+```vue
+<BackgroundFX scheme="emerald" />
+```
+- Toast notifications and loading states are implemented for login/register, checkout, and admin CRUD.
 
 ## Testing Auth via PowerShell
 
@@ -62,6 +86,8 @@ $login | ConvertTo-Json -Compress
   - POST `/api/cart/checkout` (JWT customer)
   - GET  `/api/orders/me` (JWT customer)
   - GET  `/api/admin/orders/` (JWT admin)
+  - GET  `/api/orders/stream?token=...` (SSE)
+  - GET  `/api/admin/orders/stream?token=...` (SSE)
 - Health & Assets
   - GET `/api/health`
   - Static images under `/images/...`
@@ -71,7 +97,7 @@ $login | ConvertTo-Json -Compress
 - Auth: `/login`, `/register`
 - Admin: `/admin/products`, `/admin/orders`
 
-Both `Orders` and `Admin Orders` poll every 7s to refresh payment status.
+Orders pages receive live updates via SSE and also poll every 7s as a safety net.
 
 ## M‑Pesa Simulation
 - The backend calls the mock M‑Pesa service, which then invokes the backend webhook:
@@ -82,6 +108,7 @@ Both `Orders` and `Admin Orders` poll every 7s to refresh payment status.
 - Backend: `backend/`
   - `cmd/api/main.go` – wiring, routes, seed
   - `internal/{controllers,services,repositories,models,auth,middlewares,utils}`
+  - `internal/realtime` – simple SSE pub/sub hub
 - Frontend: `frontend/`
   - `src/pages/*`, `src/components/NavBar.vue`, `src/stores/auth.ts`, `src/lib/api.ts`, `src/router.ts`
 - Mock M‑Pesa: `mock-mpesa/`
@@ -91,10 +118,25 @@ Both `Orders` and `Admin Orders` poll every 7s to refresh payment status.
 - GORM `AutoMigrate` runs on startup (for a production DB, consider `golang-migrate`).
 - JWT expiry is set to 72h. Secret: `JWT_SECRET` in env.
 - Image storage path configured via `IMAGE_STORAGE_PATH`; served at `/images`.
+ - CORS is enabled for `http://localhost:5173` by default.
+
+## Environment Variables (excerpt)
+- `DATABASE_URL` – Postgres DSN
+- `PORT` – API port (default `8080`)
+- `JWT_SECRET` – JWT signing key
+- `MOCK_MPESA_URL` – Base URL for mock M‑Pesa
+- `IMAGE_STORAGE_PATH` – Where uploaded images are stored (served at `/images`)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` – Seeded admin credentials
+- `SEED` – When `true`, forces product seeding at startup (use sparingly)
 
 ## Roadmap / Nice to Have
-- Unit tests for auth, checkout, webhook (Go)
+- More unit/integration tests: checkout + webhook (some tests exist for JWT/password)
 - E2E tests
-- WebSocket or SSE for real‑time payment updates
+- WebSocket alternative to SSE if desired
 - More robust error handling and UI polish
+
+## Troubleshooting
+- Frontend type errors (Volar/TS): ensure `node_modules` exists in the web container; restart TS/Vue server if needed.
+- CORS: frontend must run on `http://localhost:5173` or update CORS allowlist in `main.go`.
+- Duplicate products: avoid setting `SEED=true` permanently; it can create duplicates on each boot.
 ```

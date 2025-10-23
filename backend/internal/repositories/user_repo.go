@@ -29,5 +29,12 @@ func (r *UserRepository) EnsureAdmin(email, hash string) (*models.User, error) {
 		if err := r.DB.Create(&u).Error; err != nil { return nil, err }
 		return &u, nil
 	}
-	return &u, err
+	if err != nil {
+		return nil, err
+	}
+	// Ensure role and password are up to date for the configured admin user
+	u.Role = models.RoleAdmin
+	u.PasswordHash = hash
+	if err := r.DB.Save(&u).Error; err != nil { return nil, err }
+	return &u, nil
 }

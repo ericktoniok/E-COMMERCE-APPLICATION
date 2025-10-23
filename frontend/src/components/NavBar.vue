@@ -7,7 +7,8 @@
       <RouterLink to="/products" class="link">Products</RouterLink>
       <RouterLink to="/cart" class="link">Cart <span v-if="cartCount" class="ml-1 bg-blue-600 text-white rounded px-2">{{ cartCount }}</span></RouterLink>
       <RouterLink to="/orders" class="link" v-if="isAuthed">My Orders</RouterLink>
-      <RouterLink to="/admin/products" class="link" v-if="isAdmin">Admin</RouterLink>
+      <RouterLink to="/admin/products" class="link" v-if="isAdmin">Admin Products</RouterLink>
+      <RouterLink to="/admin/orders" class="link" v-if="isAdmin">Admin Orders</RouterLink>
       <template v-if="!isAuthed">
         <RouterLink to="/login" class="link">Login</RouterLink>
         <RouterLink to="/register" class="link">Register</RouterLink>

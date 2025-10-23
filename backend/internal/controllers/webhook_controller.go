@@ -35,6 +35,10 @@ func (h *WebhookController) Mpesa(c *fiber.Ctx) error {
 	if err := json.Unmarshal(b, &w); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "bad payload"})
 	}
+	// Ensure transaction exists
+	if _, err := h.Transactions.ByProviderRef(w.TransactionID); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "unknown transaction"})
+	}
 	// Update transaction status by provider ref
 	status := models.TxFailed
 	if w.Status == "SUCCESS" { status = models.TxSuccess }

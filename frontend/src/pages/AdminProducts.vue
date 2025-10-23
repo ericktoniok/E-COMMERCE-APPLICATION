@@ -6,7 +6,7 @@
       <input v-model.number="form.price_cents" type="number" placeholder="Price (cents)" class="input" required />
       <input v-model.number="form.stock" type="number" placeholder="Stock" class="input" required />
       <input v-model="form.description" placeholder="Description" class="input md:col-span-2" />
-      <button class="btn-primary md:col-span-5">Create</button>
+      <button class="btn-primary md:col-span-5" :disabled="creating">{{ creating ? 'Creating…' : 'Create' }}</button>
       <p v-if="err" class="text-red-600 text-sm md:col-span-5">{{ err }}</p>
     </form>
 
@@ -21,8 +21,8 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button class="btn" @click="save(p)">Save</button>
-          <button class="btn-danger" @click="remove(p.id)">Delete</button>
+          <button class="btn" :disabled="savingId===p.id" @click="save(p)">{{ savingId===p.id ? 'Saving…' : 'Save' }}</button>
+          <button class="btn-danger" :disabled="deletingId===p.id" @click="remove(p.id)">{{ deletingId===p.id ? 'Deleting…' : 'Delete' }}</button>
         </div>
       </div>
     </div>
@@ -31,22 +31,42 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { api } from '../lib/api'
+import { toast } from '../lib/toast'
 
 const products = ref<any[]>([])
 const err = ref('')
 const form = reactive({ name:'', price_cents:0, stock:0, description:'' })
+const creating = ref(false)
+const savingId = ref<number | null>(null)
+const deletingId = ref<number | null>(null)
 
 async function load() { products.value = await api.products() }
 
 async function create() {
   err.value = ''
-  try { await api.createProduct(form); form.name=''; form.price_cents=0; form.stock=0; form.description=''; await load() } catch (e:any) { err.value = 'Create failed' }
+  creating.value = true
+  try {
+    await api.createProduct(form)
+    form.name=''; form.price_cents=0; form.stock=0; form.description=''
+    await load()
+    toast('Product created','success')
+  } catch (e:any) {
+    err.value = 'Create failed'
+    toast('Create failed','error')
+  }
+  creating.value = false
 }
-async function save(p:any) { try { await api.updateProduct(p.id, p); await load() } catch {}
+async function save(p:any) {
+  savingId.value = p.id
+  try { await api.updateProduct(p.id, p); await load(); toast('Product saved','success') } catch { toast('Save failed','error') }
+  savingId.value = null
 }
-async function remove(id:number) { try { await api.deleteProduct(id); await load() } catch {}
+async function remove(id:number) {
+  deletingId.value = id
+  try { await api.deleteProduct(id); await load(); toast('Product deleted','success') } catch { toast('Delete failed','error') }
+  deletingId.value = null
 }
-async function upload(id:number, file: File|null) { if (!file) return; try { await api.uploadProductImage(id, file); await load() } catch {}
+async function upload(id:number, file: File|null) { if (!file) return; try { await api.uploadProductImage(id, file); await load(); toast('Image uploaded','success') } catch { toast('Image upload failed','error') }
 }
 
 onMounted(load)

@@ -20,6 +20,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../lib/api'
+import { toast } from '../lib/toast'
 
 const items = ref<Array<{product_id:number; qty:number; name?:string}>>([])
 const loading = ref(false)
@@ -34,11 +35,13 @@ async function placeOrder() {
   error.value = ''
   loading.value = true
   try {
-    await api.checkout(items.value.map(i => ({ product_id: i.product_id, qty: i.qty })))
+    await api.checkout(items.value.map((i: {product_id:number; qty:number}) => ({ product_id: i.product_id, qty: i.qty })))
     localStorage.removeItem('cart')
+    toast('Order placed!','success')
     router.push('/orders')
   } catch (e:any) {
     error.value = 'Checkout failed (are you logged in?)'
+    toast('Checkout failed','error')
   } finally {
     loading.value = false
   }
